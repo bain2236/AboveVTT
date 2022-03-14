@@ -756,16 +756,128 @@ function edit_scene_dialog(scene_id) {
 
 }
 
+
+function edit_scene_folder_dialog(scene_id) {
+	let scene = window.ScenesHandler.scenes[scene_id];
+	
+	console.log('edit_scene_dialog');
+	$("#scene_selector").attr('disabled', 'disabled');
+	dialog = $("<div id='edit_dialog'></div>");
+	dialog.css('background', "url('/content/1-0-1487-0/skins/waterdeep/images/mon-summary/paper-texture.png')");
+
+	scene_properties = $('<div id="scene_properties"/>');
+	dialog.append(scene_properties);
+	dialog.css('position', 'fixed');
+	dialog.css('width', '600px');
+	dialog.css('top', '100px');
+	dialog.css('left', '300px');
+	dialog.css('height', '350px');
+	dialog.css('z-index', 99999);
+	dialog.css('border', 'solid 1px black');
+
+	$("#site").append(dialog);
+
+	var container = scene_properties;
+
+	container.empty();
+
+	let f = $("<form />");
+	f.on('submit', function(e) { e.preventDefault(); });
+
+	let addrow = function(name, title, type = 'text') {
+		var row = $("<div style='width:100%;'/>");
+		var c1 = $("<div style='display: inline-block; width:30%'>" + title + "</div>");
+		c1.css("font-weight", "bold");
+		var c2 = $("<div style='display:inline-block; width:70%'/>");
+		var i = $("<input />");
+		i.attr('type', type);
+		i.attr('name', name);
+		i.val(scene[name]);
+		i.css("width", "70%");
+		c2.append(i);
+		row.append(c1);
+		row.append(c2);
+		f.append(row);
+	};
+	var uuid_hidden = $("<input name='uuid' type='hidden'/>");
+	uuid_hidden.val(scene['uuid']);
+	f.append(uuid_hidden);
+
+	addrow('title', 'Folder Title');
+
+	var sub = $("<button>Save And Switch</button>");
+
+	if(window.CLOUD)
+		sub.html("Save");
+
+	sub.click(function() {
+		f.find("input").each(function() {
+			var n = $(this).attr('name');
+			var t = $(this).attr('type');
+			let nValue = null;
+			if (t == "checkbox") {
+				nValue = $(this).prop("checked") ? "1" : "0";
+			}
+			else {
+				nValue = $(this).val();
+			}
+
+			if ( ((n === 'player_map') || (n==='dm_map'))   
+					&& nValue.startsWith("https://drive.google.com")
+					&& nValue.indexOf("uc?id=") < 0
+			) {
+				nValue = 'https://drive.google.com/uc?id=' + nValue.split('/')[5];
+			}
+
+			scene[n] = nValue;
+			console.log('setto ' + n + ' a ' + $(this).val());
+		});
+		if(window.CLOUD){
+			window.ScenesHandler.persist_scene(scene_id,true,true);
+		}
+		else{
+			window.ScenesHandler.persist();
+			window.ScenesHandler.switch_scene(scene_id);
+		}
+		$("#edit_dialog").remove();
+		$("#scene_selector").removeAttr("disabled");
+		$("#scene_selector_toggle").click();
+	});
+
+	cancel = $("<button>Cancel</button>");
+	cancel.click(function() {
+		$("#edit_dialog").remove();
+		$("#scene_selector").removeAttr("disabled");
+	})
+
+
+	f.append(sub);
+	f.append(cancel);
+	container.css('opacity', '0.0');
+	container.append(f);
+	container.animate({
+		opacity: '1.0'
+	}, 1000);
+}
+
 function scene_edit_button(scene_id){
-	edit_button = $("<button><img height=10 src='"+window.EXTENSION_PATH+"assets/icons/edit.svg'></button>");
+	edit_button = $(`<button><img height=10 src=${window.EXTENSION_PATH}assets/icons/edit.svg></button>`);
 	edit_button.click(function() {
 		edit_scene_dialog(scene_id);
 	});
 	return edit_button
 }
 
+function scene_folder_edit_button(scene_id){
+	edit_button = $(`<button><img height=10 src=${window.EXTENSION_PATH}assets/icons/folder editing.svg></button>`);
+	edit_button.click(function() {
+		edit_scene_folder_dialog(scene_id);
+	});
+	return edit_button
+}
+
 function scene_delete_button(scene_id){
-	delete_button=$("<button><img height=10 src='"+window.EXTENSION_PATH+"assets/icons/delete.svg'></button>");
+	delete_button=$(`<button><img height=10 src=${window.EXTENSION_PATH}assets/icons/delete.svg></button>`);
 	delete_button.click(function() {
 		r = confirm("Are you sure that you want to delete this scene?");
 		if (r == true) {
@@ -783,13 +895,18 @@ function scene_delete_button(scene_id){
 	return delete_button
 }
 
-function refresh_scenes() {
+function refresh_scenes(scene_folder=null) {
 	target = $("#scene_selector");
 	target.find(".scene").remove();
-	
-	for (var i = 0; i < window.ScenesHandler.scenes.length; i++) {
+	scenes = window.ScenesHandler.scenes
+	if(scene_folder) {
+		console.log("scene folder")
+		scenes=scene_folder.scenes
+	}
+
+	for (var i = 0; i < scenes.length; i++) {
 		let scene_id = i;
-		var scene = window.ScenesHandler.scenes[i];
+		var scene = scenes[i];
 		if (!scene.is_folder){
 			var newobj = $("<div class='scene' data-scene-index='"+i+"'/>");
 			title = $("<div class='scene_title' style='text-align:center;'/>");
@@ -909,19 +1026,24 @@ function refresh_scenes() {
 			$("#scene_selector").css("overflow","auto");
 		}
 		else{
-			var newobj = $("<div class='scene' data-scene-index='"+i+"'/>");
+			var sceneTile = $("<div class='scene' data-scene-index='"+i+"'/>");
 			title = $("<div class='scene_title' style='text-align:center;'/>");
-			console.log("scene folder title", scene.title)
 			title.html(scene.title);
-			newobj.append(title);
+			sceneTile.append(title);
 			controls = $("<div/>");
-			controls.append(scene_edit_button(scene_id));
+			open_folder = $("<button>Open</button>");
+			open_folder.click(function() {
+				console.log(window.ScenesHandler.scenes[scene_id].scenes)
+				console.log("opening a folder")
+				refresh_scenes(window.ScenesHandler.scenes[scene_id]);
+			});
+			controls.append(open_folder);
+			controls.append(scene_folder_edit_button(scene_id));
 			controls.append(scene_delete_button(scene_id));
-			newobj.append(controls);
-			$("#addscenefolder").parent().before(newobj);
+			sceneTile.append(controls);
+			$("#addscenefolder").parent().before(sceneTile);
 		}
 	}
-	
 }
 
 
@@ -933,7 +1055,7 @@ function init_scene_selector() {
 
 	addblock = $("<div style='float:left;overflow: hidden;display:block;'/>");
 	addbutton = $("<button id='addscene'><span class='material-icons button-icon md-dark md-32'>add</span></button></button>");
-	folderButton = $("<button id='addscenefolder'><span class='material-icons button-icon md-dark md-32'>CreateNewFolder</span></button></button>");
+	folderButton = $("<button id='addscenefolder'><span class='material-icons button-icon md-dark md-32'>folder</span></button></button>");
 	
 	addbutton.click(function() {
 		window.ScenesHandler.scenes.push({
@@ -974,6 +1096,7 @@ function init_scene_selector() {
 			id: uuid(),
 			title: "New Folder",
 			order: Date.now(),
+			scenes: [],
 			is_folder: true
 		}
 		);
