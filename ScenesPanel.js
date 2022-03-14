@@ -756,151 +756,175 @@ function edit_scene_dialog(scene_id) {
 
 }
 
+function scene_edit_button(scene_id){
+	edit_button = $("<button><img height=10 src='"+window.EXTENSION_PATH+"assets/icons/edit.svg'></button>");
+	edit_button.click(function() {
+		edit_scene_dialog(scene_id);
+	});
+	return edit_button
+}
+
+function scene_delete_button(scene_id){
+	delete_button=$("<button><img height=10 src='"+window.EXTENSION_PATH+"assets/icons/delete.svg'></button>");
+	delete_button.click(function() {
+		r = confirm("Are you sure that you want to delete this scene?");
+		if (r == true) {
+			if(window.CLOUD){
+				window.MB.sendMessage("custom/myVTT/delete_scene",{id:window.ScenesHandler.scenes[scene_id].id})
+			}
+			window.ScenesHandler.scenes.splice(scene_id, 1);
+			if(!window.CLOUD){
+				window.ScenesHandler.persist();
+			}
+			refresh_scenes();
+			
+		}
+	});
+	return delete_button
+}
+
 function refresh_scenes() {
 	target = $("#scene_selector");
 	target.find(".scene").remove();
-
+	
 	for (var i = 0; i < window.ScenesHandler.scenes.length; i++) {
 		let scene_id = i;
 		var scene = window.ScenesHandler.scenes[i];
-		var newobj = $("<div class='scene' data-scene-index='"+i+"'/>");
+		if (!scene.is_folder){
+			var newobj = $("<div class='scene' data-scene-index='"+i+"'/>");
+			title = $("<div class='scene_title' style='text-align:center;'/>");
+			title.html(scene.title);
 
+			if ( (i == window.ScenesHandler.current_scene_id)   && (!window.CLOUD))
+				newobj.addClass('active_scene');
+			newobj.append(title);
+			controls = $("<div/>");
+			if(window.CLOUD){
+				let switch_players=$("<button>PLAYERS</button>");
 
-		title = $("<div class='scene_title' style='text-align:center;'/>");
-		title.html(scene.title);
+				if(window.PLAYER_SCENE_ID==window.ScenesHandler.scenes[scene_id].id){
+					console.log("players are here!");
+					switch_players.css("background","#FF7F7F");
+				}
 
-		if ( (i == window.ScenesHandler.current_scene_id)   && (!window.CLOUD))
-			newobj.addClass('active_scene');
-		newobj.append(title);
-		controls = $("<div/>");
-		if(window.CLOUD){
-			let switch_players=$("<button>PLAYERS</button>");
+				switch_players.click(function(){
+					let msg={
+						sceneId:window.ScenesHandler.scenes[scene_id].id,
+					};
+					window.PLAYER_SCENE_ID=window.ScenesHandler.scenes[scene_id].id;
+					refresh_scenes();
+					window.MB.sendMessage("custom/myVTT/switch_scene",msg);
+				});
+				
+				let switch_dm=$("<button>DM</button>");
+				if(window.CURRENT_SCENE_DATA && (window.CURRENT_SCENE_DATA.id==window.ScenesHandler.scenes[scene_id].id)){
+					switch_dm.css("background","#FF7F7F");
+				}
+				switch_dm.click(function(){
+					let msg={
+						sceneId:window.ScenesHandler.scenes[scene_id].id,
+						switch_dm: true
+					};
+					window.MB.sendMessage("custom/myVTT/switch_scene",msg);
+				});
+				if(scene.player_map){
+					switch_players.removeAttr("disabled");
+					switch_dm.removeAttr("disabled");
+				}
+				else{
+					switch_players.attr("disabled","true");
+					switch_dm.attr("disabled","true");
+				}
 
-			if(window.PLAYER_SCENE_ID==window.ScenesHandler.scenes[scene_id].id){
-				console.log("players are here!");
-				switch_players.css("background","#FF7F7F");
-			}
-
-			switch_players.click(function(){
-				let msg={
-					sceneId:window.ScenesHandler.scenes[scene_id].id,
-				};
-				window.PLAYER_SCENE_ID=window.ScenesHandler.scenes[scene_id].id;
-				refresh_scenes();
-				window.MB.sendMessage("custom/myVTT/switch_scene",msg);
-			});
-			
-			let switch_dm=$("<button>DM</button>");
-			if(window.CURRENT_SCENE_DATA && (window.CURRENT_SCENE_DATA.id==window.ScenesHandler.scenes[scene_id].id)){
-				switch_dm.css("background","#FF7F7F");
-			}
-			switch_dm.click(function(){
-				let msg={
-					sceneId:window.ScenesHandler.scenes[scene_id].id,
-					switch_dm: true
-				};
-				window.MB.sendMessage("custom/myVTT/switch_scene",msg);
-			});
-			if(scene.player_map){
-				switch_players.removeAttr("disabled");
-				switch_dm.removeAttr("disabled");
+				controls.append(switch_players);
+				controls.append(switch_dm);
 			}
 			else{
-				switch_players.attr("disabled","true");
-				switch_dm.attr("disabled","true");
+				switch_button = $("<button>SWITCH</button>");
+				if(scene.player_map)
+					switch_button.removeAttr("disabled");
+				else
+					switch_button.attr("disabled","true");
+					
+				switch_button.click(function() {
+					window.ScenesHandler.switch_scene(scene_id);
+					$("#scene_selector_toggle").click();
+					refresh_scenes();
+				});
+				controls.append(switch_button);
 			}
+			
+			controls.append(scene_edit_button(scene_id));
+			controls.append(scene_delete_button(scene_id));
+			newobj.append(controls);
 
-			controls.append(switch_players);
-			controls.append(switch_dm);
+			$("#addscene").parent().before(newobj);
+
+			$("#scene_selector").sortable({
+				handle: ".scene_title",
+				forcePlaceholderSize: true,
+				placeholder: "sortable_placeholder", 
+				update: function(event, ui) {
+					let fromSceneIndex = ui.item.attr("data-scene-index");
+					let toSceneIndex;
+					let j = 0;
+					let tempScenes = [];
+					$("#scene_selector").children('.scene').each(function(j) {
+						let oldSceneID = $(this).attr("data-scene-index");
+						if (fromSceneIndex == oldSceneID) {
+							toSceneIndex = j;
+						}
+						tempScenes.push(window.ScenesHandler.scenes[oldSceneID]);
+						$(this).attr("data-scene-index", j);
+						if ($(this).hasClass('active_scene')) {
+							window.ScenesHandler.current_scene_id = j;
+						}
+						j++;
+					});
+					console.log("Scene "+fromSceneIndex+" moved to "+toSceneIndex);
+					if(window.CLOUD){
+						let neworder;
+						console.log(window.ScenesHandler.scenes);
+						if(toSceneIndex < fromSceneIndex){ // moving back
+							if(toSceneIndex==0)
+								neworder=window.ScenesHandler.scenes[0].order-100;
+							else
+								neworder=Math.round((window.ScenesHandler.scenes[toSceneIndex].order + window.ScenesHandler.scenes[toSceneIndex-1].order)/2);
+						}
+						else{
+							if(toSceneIndex==(window.ScenesHandler.scenes.length-1)){
+								neworder=window.ScenesHandler.scenes[toSceneIndex].order+100;
+							}
+							else
+								neworder=Math.round((window.ScenesHandler.scenes[toSceneIndex].order + window.ScenesHandler.scenes[toSceneIndex+1].order)/2);
+						}
+						window.ScenesHandler.scenes[fromSceneIndex].order=neworder;
+						window.ScenesHandler.persist_scene(fromSceneIndex);
+					}
+					window.ScenesHandler.scenes = tempScenes;
+					window.ScenesHandler.persist();
+					refresh_scenes();
+				}
+			});
+			$("#scene_selector").css("overflow","auto");
 		}
 		else{
-			switch_button = $("<button>SWITCH</button>");
-			if(scene.player_map)
-				switch_button.removeAttr("disabled");
-			else
-				switch_button.attr("disabled","true");
-				
-			switch_button.click(function() {
-				window.ScenesHandler.switch_scene(scene_id);
-				$("#scene_selector_toggle").click();
-				refresh_scenes();
-			});
-			controls.append(switch_button);
+			var newobj = $("<div class='scene' data-scene-index='"+i+"'/>");
+			title = $("<div class='scene_title' style='text-align:center;'/>");
+			console.log("scene folder title", scene.title)
+			title.html(scene.title);
+			newobj.append(title);
+			controls = $("<div/>");
+			controls.append(scene_edit_button(scene_id));
+			controls.append(scene_delete_button(scene_id));
+			newobj.append(controls);
+			$("#addscenefolder").parent().before(newobj);
 		}
-		edit_button = $("<button><img height=10 src='"+window.EXTENSION_PATH+"assets/icons/edit.svg'></button>");
-		edit_button.click(function() {
-			edit_scene_dialog(scene_id);
-		});
-		controls.append(edit_button);
-		delete_button=$("<button><img height=10 src='"+window.EXTENSION_PATH+"assets/icons/delete.svg'></button>");
-		delete_button.click(function() {
-			r = confirm("Are you sure that you want to delete this scene?");
-			if (r == true) {
-				if(window.CLOUD){
-					window.MB.sendMessage("custom/myVTT/delete_scene",{id:window.ScenesHandler.scenes[scene_id].id})
-				}
-				window.ScenesHandler.scenes.splice(scene_id, 1);
-				if(!window.CLOUD){
-					window.ScenesHandler.persist();
-				}
-				refresh_scenes();
-				
-			}
-		});
-		controls.append(delete_button);
-		newobj.append(controls);
-
-		$("#addscene").parent().before(newobj);
-
-		$("#scene_selector").sortable({
-			handle: ".scene_title",
-			forcePlaceholderSize: true,
-			placeholder: "sortable_placeholder", 
-			update: function(event, ui) {
-				let fromSceneIndex = ui.item.attr("data-scene-index");
-				let toSceneIndex;
-				let j = 0;
-				let tempScenes = [];
-				$("#scene_selector").children('.scene').each(function(j) {
-					let oldSceneID = $(this).attr("data-scene-index");
-					if (fromSceneIndex == oldSceneID) {
-						toSceneIndex = j;
-					}
-					tempScenes.push(window.ScenesHandler.scenes[oldSceneID]);
-					$(this).attr("data-scene-index", j);
-					if ($(this).hasClass('active_scene')) {
-						window.ScenesHandler.current_scene_id = j;
-					}
-					j++;
-				});
-				console.log("Scene "+fromSceneIndex+" moved to "+toSceneIndex);
-				if(window.CLOUD){
-					let neworder;
-					console.log(window.ScenesHandler.scenes);
-					if(toSceneIndex < fromSceneIndex){ // moving back
-						if(toSceneIndex==0)
-							neworder=window.ScenesHandler.scenes[0].order-100;
-						else
-							neworder=Math.round((window.ScenesHandler.scenes[toSceneIndex].order + window.ScenesHandler.scenes[toSceneIndex-1].order)/2);
-					}
-					else{
-						if(toSceneIndex==(window.ScenesHandler.scenes.length-1)){
-							neworder=window.ScenesHandler.scenes[toSceneIndex].order+100;
-						}
-						else
-							neworder=Math.round((window.ScenesHandler.scenes[toSceneIndex].order + window.ScenesHandler.scenes[toSceneIndex+1].order)/2);
-					}
-					window.ScenesHandler.scenes[fromSceneIndex].order=neworder;
-					window.ScenesHandler.persist_scene(fromSceneIndex);
-				}
-				window.ScenesHandler.scenes = tempScenes;
-				window.ScenesHandler.persist();
-				refresh_scenes();
-			}
-		});
-		$("#scene_selector").css("overflow","auto");
 	}
+	
 }
+
+
 
 function init_scene_selector() {
 	ss = $("<div  id='scene_selector' />");
@@ -909,7 +933,8 @@ function init_scene_selector() {
 
 	addblock = $("<div style='float:left;overflow: hidden;display:block;'/>");
 	addbutton = $("<button id='addscene'><span class='material-icons button-icon md-dark md-32'>add</span></button></button>");
-
+	folderButton = $("<button id='addscenefolder'><span class='material-icons button-icon md-dark md-32'>CreateNewFolder</span></button></button>");
+	
 	addbutton.click(function() {
 		window.ScenesHandler.scenes.push({
 			id: uuid(),
@@ -931,7 +956,25 @@ function init_scene_selector() {
 			grid: 0,
 			snap: 0,
 			reveals: [[0, 0, 0, 0, 2, 0]], // SPECIAL MESSAGE TO REVEAL EVERYTHING
-			order: Date.now()
+			order: Date.now(),
+			is_folder: false
+		}
+		);
+		if(window.CLOUD){
+			window.ScenesHandler.persist_scene(window.ScenesHandler.scenes.length -1,true);
+		}
+		else{
+			window.ScenesHandler.persist();
+		}
+		refresh_scenes();
+	});
+
+	folderButton.click(function() {
+		window.ScenesHandler.scenes.push({
+			id: uuid(),
+			title: "New Folder",
+			order: Date.now(),
+			is_folder: true
 		}
 		);
 		if(window.CLOUD){
@@ -945,6 +988,7 @@ function init_scene_selector() {
 
 
 	addblock.append(addbutton);
+	addblock.append(folderButton);
 	ss.append(addblock);
 
 
