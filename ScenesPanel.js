@@ -869,7 +869,7 @@ function scene_edit_button(scene_id){
 }
 
 function scene_folder_edit_button(scene_id){
-	edit_button = $(`<button><img height=10 src=${window.EXTENSION_PATH}assets/icons/folder editing.svg></button>`);
+	edit_button = $(`<button><img height=10 src=${window.EXTENSION_PATH}assets/icons/folder.svg></button>`);
 	edit_button.click(function() {
 		edit_scene_folder_dialog(scene_id);
 	});
@@ -902,6 +902,9 @@ function refresh_scenes(scene_folder=null) {
 	if(scene_folder) {
 		console.log("scene folder")
 		scenes=scene_folder.scenes
+		title = $("<div class='scene_title' style='text-align:center;'/>");
+		title.html(scene.title);
+		sceneTile.append(title);
 	}
 
 	for (var i = 0; i < scenes.length; i++) {
