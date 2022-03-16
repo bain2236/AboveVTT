@@ -1055,12 +1055,12 @@ function init_scene_selector() {
 	ss = $("<div  id='scene_selector' />");
 	ss.hide();
 
-
 	addblock = $("<div style='float:left;overflow: hidden;display:block;'/>");
 	addbutton = $("<button id='addscene'><span class='material-icons button-icon md-dark md-32'>add</span></button></button>");
 	folderButton = $("<button id='addscenefolder'><span class='material-icons button-icon md-dark md-32'>folder</span></button></button>");
 	
-	addbutton.click(function() {
+	addbutton.click(function(e) {
+		console.log(e)
 		window.ScenesHandler.scenes.push({
 			id: uuid(),
 			title: "New Scene",
