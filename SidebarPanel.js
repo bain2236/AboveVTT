@@ -1,9 +1,8 @@
-
 function init_sidebar_tabs() {
   console.log("init_sidebar_tabs");
 
   let sidebarContent = is_characters_page() ? $(".ct-sidebar__pane-content") : $(".sidebar__pane-content");
-  
+
   // gamelog doesn't use it yet, maybe never
 
   $("#players-panel").remove();
@@ -27,7 +26,7 @@ function init_sidebar_tabs() {
   $("#sounds-panel").remove();
   soundsPanel = new SidebarPanel("sounds-panel", false);
   sidebarContent.append(soundsPanel.build());
-	init_audio();
+	init_audio_ui();
 
   $("#journal-panel").remove();
   journalPanel = new SidebarPanel("journal-panel", false);
@@ -70,7 +69,7 @@ class SidebarPanel {
   constructor(id, is_modal) {
     this.id = id.startsWith("#") ? id.substring(1) : id;
     if (is_modal == false) {
-      // this.is_modal defaults to true. If anything other than false is passed in (such as undefined), just leave it as the default. 
+      // this.is_modal defaults to true. If anything other than false is passed in (such as undefined), just leave it as the default.
       this.is_modal = is_modal;
     }
   }
@@ -125,7 +124,7 @@ class SidebarPanel {
     this.container.find(".sidebar-panel-loading-indicator").remove(); // just in case there was already one shown we don't want to add a second one
     this.container.append(loadingIndicator);
   }
-  
+
   remove_sidebar_loading_indicator() {
     $(`#${this.id} .sidebar-panel-loading-indicator`).animate({
       "left": "400px"
@@ -133,8 +132,8 @@ class SidebarPanel {
       $(".sidebar-panel-loading-indicator").remove();
     });
   }
-  
-  
+
+
 
   //#endregion Class functions
   //#region UI Construction
@@ -150,12 +149,12 @@ class SidebarPanel {
         <div class="sidebar-panel-body"></div>
         <div class="sidebar-panel-footer">
           <div class="footer-input-wrapper"></div>
-        </div>      
+        </div>
       </div>
     `);
 
     if (this.is_modal) {
-      let closeButton = $(`<button class="ddbeb-modal__close-button qa-modal_close" title="Close Modal"><svg class="" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><g transform="rotate(-45 50 50)"><rect x="0" y="45" width="100" height="10"></rect></g><g transform="rotate(45 50 50)"><rect x="0" y="45" width="100" height="10"></rect></g></svg></button>`); 
+      let closeButton = $(`<button class="ddbeb-modal__close-button qa-modal_close" title="Close Modal"><svg class="" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><g transform="rotate(-45 50 50)"><rect x="0" y="45" width="100" height="10"></rect></g><g transform="rotate(45 50 50)"><rect x="0" y="45" width="100" height="10"></rect></g></svg></button>`);
       closeButton.click(close_sidebar_modal);
       panelContainer.find(".sidebar-panel-header").prepend(closeButton);
 
@@ -191,7 +190,7 @@ class SidebarPanel {
         console.warn(`Failed to provide a valid function to handle ${newImageUrl}`);
       };
     }
-    
+
     let inputLabel = $(`<div class="token-image-modal-footer-title">${titleText}</div>`);
     let urlInput = $(`<input title="${titleText}" placeholder="https://..." name="addCustomImage" type="text" />`);
     urlInput.on('keyup', function(event) {
@@ -200,11 +199,11 @@ class SidebarPanel {
         if(imageUrl.startsWith("data:")){
           alert("You cannot use urls starting with data:");
           return;
-        }	
+        }
         imageUrlEntered(imageUrl);
       }
     });
-  
+
     let addButton = $(`<button class="sidebar-panel-footer-button token-image-modal-add-button">Add</button>`);
     addButton.click(function(event) {
       let imageUrl = $(event.target).closest(".token-image-modal-url-label-add-wrapper").find(`input[name="addCustomImage"]`)[0].value;
@@ -212,20 +211,20 @@ class SidebarPanel {
         if(imageUrl.startsWith("data:")){
           alert("You cannot use urls starting with data:");
           return;
-        }	
+        }
         imageUrlEntered(imageUrl);
       }
     });
 
-    
+
     let labelAndUrlWrapper = $(`<div class="token-image-modal-url-label-wrapper"></div>`); // this is to keep the label and input stacked vertically
     labelAndUrlWrapper.append(inputLabel);                  // label above input
     labelAndUrlWrapper.append(urlInput);                    // input below label
-    
+
     let addButtonAndLabelUrlWrapper = $(`<div class="token-image-modal-url-label-add-wrapper"></div>`); // this is to keep the add button on the right side of the label and input
     addButtonAndLabelUrlWrapper.append(labelAndUrlWrapper); // label/input on the left
     addButtonAndLabelUrlWrapper.append(addButton);          // add button on the right
-    
+
     return addButtonAndLabelUrlWrapper;
   }
 
