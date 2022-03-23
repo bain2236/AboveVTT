@@ -365,6 +365,7 @@ class Token {
 			this.update_dead_cross(old)
 			this.update_health_aura(old)
 		}
+		toggle_player_selectable(this, old)
 		console.groupEnd()
 	}
 
@@ -751,6 +752,7 @@ class Token {
 
 			if (this.selected) {
 				old.addClass("tokenselected");
+				toggle_player_selectable(this, old)
 			}
 			else {
 				old.css("border", "");
@@ -1163,6 +1165,7 @@ class Token {
 				}
 				if (thisSelected == true) {
 					parentToken.addClass('tokenselected');
+					toggle_player_selectable(window.TOKEN_OBJECTS[tokID], parentToken)
 				} else {
 					parentToken.removeClass('tokenselected');
 				}				
@@ -1187,6 +1190,7 @@ class Token {
 		let token = $("#tokens").find(selector);
 		this.update_health_aura(token)
 		this.update_dead_cross(token)
+		toggle_player_selectable(this, token)
 		check_token_visibility(); // CHECK FOG OF WAR VISIBILITY OF TOKEN
 		console.groupEnd()
 	}
@@ -1218,6 +1222,22 @@ class Token {
 		return storedValue;
 	}
 	
+}
+
+function toggle_player_selectable(tokenInstance, token){
+	console.group("toggle_player_selectable", tokenInstance)
+	if (!window.DM){
+		console.log("bain not the DM")
+		if (tokenInstance.options.locked && tokenInstance.options.restrictPlayerMove && $(".body-rpgcharacter-sheet").length>0){
+			token.find("img").css("cursor","default")
+			token.find("img").css("pointer-events","none")
+		}
+		else{
+			token.find("img").css("cursor","move")
+			token.find("img").css("pointer-events","auto")
+		}
+	}
+	console.groupEnd()
 }
 
 // Stop the right click mouse down from cancelling our drag
