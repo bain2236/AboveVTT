@@ -1229,15 +1229,15 @@ function toggle_player_selectable(tokenInstance, token){
 	if (!window.DM){
 		console.log("bain not the DM")
 		if (tokenInstance.options.locked && tokenInstance.options.restrictPlayerMove && $(".body-rpgcharacter-sheet").length>0){
-			token.find("img").css("cursor","default")
-			token.find("img").css("pointer-events","none")
+			token.css("cursor","default");
+			token.css("pointer-events","none");
 		}
 		else{
-			token.find("img").css("cursor","move")
-			token.find("img").css("pointer-events","auto")
+			token.css("cursor","move");
+			token.css("pointer-events","auto");
 		}
 	}
-	console.groupEnd()
+	console.groupEnd();
 }
 
 // Stop the right click mouse down from cancelling our drag
