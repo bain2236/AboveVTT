@@ -1328,7 +1328,7 @@ audio::-webkit-media-controls-time-remaining-display{
     margin-top: 4px;
 }
 
-.note .mce-panel { 
+.note .mce-panel {
     border:  none;
 }
 
@@ -2039,6 +2039,20 @@ button.avtt-roll-button {
     float: right;
 }
 
+#track-list li {
+    height: 25px;
+    transition: transform .2s;
+}
+
+#track-list li:hover {
+    background-color:lightskyblue;
+}
+
+#track-list button {
+    float: right;
+    height: 100%;
+}
+
 .MuiModal-root{
     pointer-events: none;
 }
@@ -2050,7 +2064,7 @@ button.avtt-roll-button {
 .ddbc-tab-options--layout-pill{
 	z-index: 57000;
 }
-#prewiz, 
+#prewiz,
 #wizard_popup{
     z-index: 58000;
 }
@@ -2077,4 +2091,3 @@ button.avtt-roll-button {
         transform: rotate(1turn);
     }
 }
-
