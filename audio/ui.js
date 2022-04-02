@@ -5,11 +5,28 @@ import Track from './track.js';
  * @returns {HTMLInputElement}
  */
 function track_controls(item){
-    //play button
     const controllerDiv = $("<div class='controls'/>")
-    const play=$("<span class='material-icons'>play_arrow</span>");
+    const play=$("<span id='play' class='material-icons'>play_arrow</span>");
+    const loop=$("<span id='loop' class='material-icons'>loop</span>");
+    const edit=$("<span id='edit' class='material-icons'>edit</span>");
+    const remove=$("<span id='delete' class='material-icons'>delete_forever</span>");
+    const volume = volumeSlider()
+    $(loop).hide()
+    $(volume).hide()
+    $(loop).click(function (e) { 
+        const track = $(this).parent().parent()
+        e.preventDefault();
+        console.log('loop track')
+        if ($(track).hasClass("looping")){
+            $(track).removeClass("looping")
+        }
+        else{
+            $(track).addClass("looping")
+        }
+        
+    });
+
     $(play).click(function (e) { 
-        // work on the li instead of teh button
         const track = $(this).parent().parent()
         e.preventDefault();
         console.log('play track')
@@ -17,23 +34,46 @@ function track_controls(item){
             $(this).text('pause');
             $(track).removeClass("playing-false")
             $(track).addClass("playing-true")
+            $(edit).fadeOut("slow", function(){
+                $(this).replaceWith(volume);
+                $(volume).fadeIn("slow");
+             });
+             $(remove).fadeOut("slow", function(){
+                $(this).replaceWith(loop);
+                $(loop).fadeIn("slow");
+             });
+            // $(loop).show("fast")
+            // $(controllerDiv).children().show("fast")
+            // $(edit).hide("slow")
+            // $(remove).hide("slow")
         }
         else {
             $(this).text('play_arrow');
             $(track).removeClass("playing-true")
             $(track).addClass("playing-false")
+            $(track).removeClass("looping")
+            // $(loop).hide("slow")
+            // $(volume).hide("slow")
+            // $(edit).show("fast")
+            // $(remove).show("fast")
+            $(volume).fadeOut("slow", function(){
+                $(this).replaceWith(edit);
+                $(edit).fadeIn("slow");
+             });
+             $(loop).fadeOut("slow", function(){
+                $(this).replaceWith(remove);
+                $(remove).fadeIn("slow");
+             });
         }
     });
-    // loop button
-    const loop=$("<span class='material-icons'>loop</span>");
-    $(loop).click(function (e) { 
-        e.preventDefault();
-        console.log('loop track')
-        
-    });
+    
     // add all buttons to controller div
     $(controllerDiv).append(play)
+    $(controllerDiv).append(edit)
+    $(controllerDiv).append(remove)
+    $(controllerDiv).append(volume)
     $(controllerDiv).append(loop)
+    
     $(controllerDiv).hide()
     // show controls on hover of track item
     $(item).hover(function () {
@@ -51,9 +91,9 @@ Track.library.onchange((e) => {
     trackList.id = 'track-list';
     e.target.map().forEach((track, id) => {
         const item = document.createElement("li");
-        item.textContent = track.name;
         item.setAttribute("data-id", id);
         item.className += "playing-false"
+        $(item).append($(`<div class='track-label'>${track.name}</div>`))
         track_controls(item)
         trackList.append(item);
     });

@@ -2035,33 +2035,42 @@ button.avtt-roll-button {
 }
 
 #sounds-panel .volume-control {
-    width: 50%;
-    float: right;
+    width: 60%;
+    position: relative;
+    bottom: 3px;
 }
 
 #track-list li {
     height: 30px;
     transition: transform .2s;
-    padding: 2px
-}
-
-#track-list #text{
-    margin:auto;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 #track-list li:hover {
     background-color:lightskyblue;
+    vertical-align: middle;
+}
+
+#track-list .track-label{
+    position: relative;
+    top: 5px;
+    float: left;
 }
 
 #track-list .controls {
+    position: relative;
+    top: 2px;
     float: right;
+    width: 50%;
 }
 #track-list .controls span {
     cursor: pointer;
+    text-shadow: 2px 2px 2px rgb(133, 133, 133);
 }
 
 #track-list .playing-false .controls span {
-    color: rgb(121, 121, 121);
+    color: rgb(85, 85, 85);
 }
 #track-list .playing-true .controls span {
     color: rgb(37, 109, 48);
@@ -2073,7 +2082,23 @@ button.avtt-roll-button {
     background-color: rgb(88, 220, 88);
 }
 #track-list .controls span:hover {
-    color: rgb(0, 8, 126);
+    color: rgb(0, 0, 0);
+}
+
+#track-list .looping #loop{
+  text-shadow: 0px 0px 0px rgb(133, 133, 133);
+  animation-name: spin;
+  animation-duration: 5000ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear; 
+}
+@keyframes spin {
+    from {
+        transform:rotate(360deg);
+    }
+    to {
+        transform:rotate(0deg);
+    }
 }
 
 
