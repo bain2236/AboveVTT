@@ -2040,18 +2040,42 @@ button.avtt-roll-button {
 }
 
 #track-list li {
-    height: 25px;
+    height: 30px;
     transition: transform .2s;
+    padding: 2px
+}
+
+#track-list #text{
+    margin:auto;
 }
 
 #track-list li:hover {
     background-color:lightskyblue;
 }
 
-#track-list button {
+#track-list .controls {
     float: right;
-    height: 100%;
 }
+#track-list .controls span {
+    cursor: pointer;
+}
+
+#track-list .playing-false .controls span {
+    color: rgb(121, 121, 121);
+}
+#track-list .playing-true .controls span {
+    color: rgb(37, 109, 48);
+}
+#track-list .playing-true {
+    background-color: lightgreen;
+}
+#track-list .playing-true:hover {
+    background-color: rgb(88, 220, 88);
+}
+#track-list .controls span:hover {
+    color: rgb(0, 8, 126);
+}
+
 
 .MuiModal-root{
     pointer-events: none;

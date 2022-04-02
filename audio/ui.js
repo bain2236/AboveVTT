@@ -1,5 +1,50 @@
 import Track from './track.js';
 
+/**
+ * Adds in html elements for the track controls
+ * @returns {HTMLInputElement}
+ */
+function track_controls(item){
+    //play button
+    const controllerDiv = $("<div class='controls'/>")
+    const play=$("<span class='material-icons'>play_arrow</span>");
+    $(play).click(function (e) { 
+        // work on the li instead of teh button
+        const track = $(this).parent().parent()
+        e.preventDefault();
+        console.log('play track')
+        if ($(track).hasClass("playing-false")){
+            $(this).text('pause');
+            $(track).removeClass("playing-false")
+            $(track).addClass("playing-true")
+        }
+        else {
+            $(this).text('play_arrow');
+            $(track).removeClass("playing-true")
+            $(track).addClass("playing-false")
+        }
+    });
+    // loop button
+    const loop=$("<span class='material-icons'>loop</span>");
+    $(loop).click(function (e) { 
+        e.preventDefault();
+        console.log('loop track')
+        
+    });
+    // add all buttons to controller div
+    $(controllerDiv).append(play)
+    $(controllerDiv).append(loop)
+    $(controllerDiv).hide()
+    // show controls on hover of track item
+    $(item).hover(function () {
+            $(controllerDiv).show()
+        }, function () {
+            $(controllerDiv).hide()
+        }
+    );
+    $(item).append(controllerDiv);
+}
+
 const trackList = document.createElement("ul");
 Track.library.onchange((e) => {
     trackList.innerHTML = "";
@@ -8,12 +53,8 @@ Track.library.onchange((e) => {
         const item = document.createElement("li");
         item.textContent = track.name;
         item.setAttribute("data-id", id);
-        const play = document.createElement('button');
-        play.textContent = 'Play';
-        play.onclick = () => {
-            console.log('play track')
-        };
-        item.appendChild(play);
+        item.className += "playing-false"
+        track_controls(item)
         trackList.append(item);
     });
 });
